@@ -5,16 +5,19 @@
 import {IUser} from './App'
 
 function openNewAuthWindow(myUrl: string): Promise<IUser> {
-  // Open the new window
+  // Open the new window to our Github login page
   const authWindow: Window = window.open(myUrl, '_blank') as Window;
 
-  // Listen for messages from authWindow
+  // Listen for messages from the window we just opened
   const authPromise: Promise<IUser> = new Promise((resolve, reject) => {
+    // Add listener on original window for a message from the 2nd
     window.addEventListener('message', (msg) => {
+      // Reject if not from our domain
       if (!msg.origin.includes(`${window.location.protocol}//${window.location.host}`)) {
         authWindow.close();
         reject('Not allowed')
       }
+      // Try several ways to resolve the promise with the data
       if (msg.data.payload) {
         try {
           resolve(JSON.parse(msg.data.payload))
@@ -26,6 +29,7 @@ function openNewAuthWindow(myUrl: string): Promise<IUser> {
           authWindow.close()
         }
       } else {
+        // If no message present, reject
         authWindow.close();
         reject('Unauthorized')
       }
